@@ -11,11 +11,16 @@ This bot sends claiming and resurrecting data to [@genesisloot](https://twitter.
 1. Create an `.env` file and set the following secrets:
 
 ```sh
-GM_CONTRACT_ADDRESS= # Smart contract address (0x...)
-GA_CONTRACT_ADDRESS= # Smart contract address (0x...)
+CONTRACT_ADDRESS= # Smart contract address (0x...)
 PROVIDER_URL= # Provider URL
-DISCORD_GM_WEBHOOK_URL= # Discord Webhook URL (Server Settings -> Integrations -> Webhooks)
-DISCORD_GA_WEBHOOK_URL= # Discord Webhook URL (Server Settings -> Integrations -> Webhooks)
+
+DISCORD_WEBHOOK_URL= # Discord Webhook URL (Server Settings -> Integrations -> Webhooks)
+DISCORD_DESCRIPTION= # How to describe the NFT
+
+ITEM_NAME= # Contract Token Name
+ITEM_ABBR= # Cotract Token Abbr
+
+METHOD_NAMES= # Comma delimited list of Contract Method Names
 ```
 
 2. Install dependencies:
