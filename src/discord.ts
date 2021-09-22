@@ -1,3 +1,6 @@
+const dotenv = require('dotenv')
+dotenv.config() // make sure this is called first
+
 import {
   MessageAttachment,
   WebhookClient,
@@ -6,23 +9,17 @@ import {
 import svg2img from 'svg2img'
 import { Message } from './types'
 
-const gmUrl = process.env.DISCORD_GM_WEBHOOK_URL
-const gaUrl = process.env.DISCORD_GA_WEBHOOK_URL
+const url = process.env.DISCORD_WEBHOOK_URL
 
-if (!gmUrl) {
-  throw new Error('Missing `DISCORD_GM_WEBHOOK_URL`')
-}
-if (!gaUrl) {
-  throw new Error('Missing `DISCORD_GA_WEBHOOK_URL`')
+if (!url) {
+  throw new Error('Missing `DISCORD_WEBHOOK_URL`')
 }
 
-const gmWebhookClient = new WebhookClient({ url: gmUrl })
-const gaWebhookClient = new WebhookClient({ url: gaUrl })
+const webhookClient = new WebhookClient({ url: url })
 
 function shortenAddress(address: string) {
   return address.slice(0, 6) + '…' + address.slice(-4)
 }
-
 
 // Discord doesn’t support data URI nor SVG files,
 // so we need to convert the data URI SVG into a PNG buffer.
@@ -46,17 +43,7 @@ export const sendDiscordMessage = async ({
     await imageBuffer(image),
     'genesisitem.png',
   )
-  let action = "";
-  let webhookClient;
-  if (itemName == "Genesis Mana") {
-    action = "Claimed";
-    webhookClient = gmWebhookClient;
-  } else if (itemName == "Genesis Adventurer") {
-    action = "Resurrected";
-    webhookClient = gaWebhookClient;
-  } else {
-    throw new Error('No itemName in Message')
-  }
+
   const message: WebhookMessageOptions = {
     username: 'Genesis Bot',
     avatarURL:
@@ -66,7 +53,7 @@ export const sendDiscordMessage = async ({
         title: `${itemName} #${tokenId}`,
         url: `https://opensea.io/assets/${process.env.CONTRACT_ADDRESS}/${tokenId}`,
         color: 0x000000,
-        description: `**${action}**`,
+        description: `**${process.env.DISCORD_DESCRIPTION}**`,
         image: { url: 'attachment://genesisitem.png' },
         footer: {
           text: `by ${shortenAddress(to)}`,

@@ -1,29 +1,36 @@
 const dotenv = require('dotenv')
 dotenv.config() // make sure this is called first
 
-import { BigNumber, Contract, Event, providers, utils } from 'ethers'
-import fetch from 'node-fetch'
-import gmAbi from './gm_abi.json'
-import gaAbi from './ga_abi.json'
-import erc20abi from './erc20abi.json'
-import { sendDiscordMessage } from './discord'
-import { Message } from './types'
+if (!process.env.ITEM_ABBR) {
+  throw new Error('Missing `ITEM_ABBR`')
+}
 
 if (!process.env.PROVIDER_URL) {
   throw new Error('Missing `PROVIDER_URL`')
 }
 
-if (!process.env.GM_CONTRACT_ADDRESS) {
-  throw new Error('Missing `GM_CONTRACT_ADDRESS`')
+if (!process.env.CONTRACT_ADDRESS) {
+  throw new Error('Missing `CONTRACT_ADDRESS`')
 }
 
-if (!process.env.GA_CONTRACT_ADDRESS) {
-  throw new Error('Missing `GA_CONTRACT_ADDRESS`')
+if (!process.env.ITEM_NAME) {
+  throw new Error('Missing `ITEM_NAME`')
 }
+
+if (!process.env.METHOD_NAMES) {
+  throw new Error('Missing `METHOD_NAMES`')
+}
+
+import { BigNumber, Contract, Event, providers, utils } from 'ethers'
+import fetch from 'node-fetch'
+import erc20abi from './erc20abi.json'
+import { sendDiscordMessage } from './discord'
+import { Message } from './types'
+
+const abi = require (`./${process.env.ITEM_ABBR}-abi.json`)
 
 let rpc = new providers.JsonRpcProvider(process.env.PROVIDER_URL)
-const gmContract = new Contract(process.env.GM_CONTRACT_ADDRESS, gmAbi, rpc)
-const gaContract = new Contract(process.env.GA_CONTRACT_ADDRESS, gaAbi, rpc)
+const contract = new Contract(process.env.CONTRACT_ADDRESS, abi, rpc)
 
 async function main () {
   return new Promise(async (_, reject) => {
@@ -31,59 +38,10 @@ async function main () {
       let result
 
       console.log('🚀 Listening for sales...')
-      result = await gmContract.totalSupply()
-      console.log('Genesis Mana Supply:',result.toString())
-      result = await gaContract.totalSupply()
-      console.log('Genesis Adventurer Supply:',result.toString())
-      gmContract.on(
-        'Transfer',
-        async (
-          from: string,
-          to: string,
-          tokenIdBN: BigNumber,
-          eventLog: Event,
-        ) => {
+      result = await contract.totalSupply()
+      console.log('Contract Total Supply:',result.toString())
 
-          const { data } = await eventLog.getTransaction();
-          let methodId = data.substring(0,10);
-          let gmInterface = new utils.Interface(gmAbi);
-          let methodName
-          try {
-            methodName = gmInterface.getFunction(methodId).name;
-          }
-          catch {
-            methodName = "unknown - " + methodId;
-          }
-          console.log("GM Transfer Event:", methodName)
-
-          const tokenId = tokenIdBN.toString()
-          const event = eventLog.toString()
-          const itemName = "Genesis Mana"
-          let image
-          try {
-            image = await gmContract.tokenURI(tokenIdBN);
-            image = image.split(",")[1];
-            image = JSON.parse(atob(image));
-            image = atob(image.image.split(",")[1]);
-          }
-          catch {
-            throw "No Image"
-          }
-
-          if ((methodName == "claimByLootId")||(methodName == "daoMint")) {
-            const message: Message = {
-              from,
-              to,
-              itemName,
-              tokenId,
-              image
-            }
-            console.log('Message: ', message);
-            sendDiscordMessage(message);
-          }
-        },
-      )
-      gaContract.on(
+      contract.on(
         'Transfer',
         async (
           from: string,
@@ -93,39 +51,41 @@ async function main () {
         ) => {
           const { data } = await eventLog.getTransaction();
           let methodId = data.substring(0,10);
-          let gaInterface = new utils.Interface(gaAbi);
+          let contractInterface = new utils.Interface(abi);
           let methodName
           try {
-            methodName = gaInterface.getFunction(methodId).name;
+            methodName = contractInterface.getFunction(methodId).name;
           }
           catch {
-            methodName = "unknown - " + methodId;
+            methodName = "Method not in ABI - " + methodId;
           }
-          console.log("GA Transfer Event:", methodName)
+          console.log("Contract Transfer Event:", methodName)
           const tokenId = tokenIdBN.toString()
           const event = eventLog.toString()
-          const itemName = "Genesis Adventurer"
-          let image
-          try {
-            image = await gaContract.tokenURI(tokenIdBN);
-            image = image.split(",")[1];
-            image = JSON.parse(atob(image));
-            image = atob(image.image.split(",")[1]);
-          }
-          catch {
-            throw "No Image"
-          }
+          const itemName = process.env.ITEM_NAME;
 
-          if ((methodName == "resurrectGA")||(methodName == "execTransaction")) {
-            const message: Message = {
-              from,
-              to,
-              itemName,
-              tokenId,
-              image
+          let methods = process.env.METHOD_NAMES.split(',');
+          for(let i=0; i < methods.length; i++) {
+            let image
+            if (methods[i] == methodName) {
+              try {
+                let base64Token = await contract.tokenURI(tokenIdBN);
+                image = tokenURIToSVG(base64Token);
+              }
+              catch {
+                throw new Error("No Image in TokenURI")
+              }
+
+              const message: Message = {
+                from,
+                to,
+                itemName,
+                tokenId,
+                image
+              }
+              console.log('Message: ', message);
+              sendDiscordMessage(message);
             }
-            console.log('Message: ', message);
-            sendDiscordMessage(message);
           }
         },
       )
@@ -134,43 +94,13 @@ async function main () {
     }
   })
 }
-//
-// const getEthUsd = async (eth: number) => {
-//   const response = await fetch('https://api.coinbase.com/v2/prices/ETH-USD/buy')
-//   const {
-//     data: { amount },
-//   }: CoinbaseData = await response.json()
-//   return (eth * parseInt(amount)).toLocaleString()
-// }
-//
-// const WETH = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-//
-// // try to extract weth transfer from logs
-// // example txs: https://etherscan.io/tx/0xd7efc5e28f495234815c79848e73265e92b5dbfed50e7127719cd19a9046fa08
-// const getWethTransfer = async (
-//   receipt: providers.TransactionReceipt,
-// ): Promise<BigNumber> => {
-//   try {
-//     const { from, to, logs } = receipt
-//     const iface = new utils.Interface(erc20abi)
-//     let amount = BigNumber.from(0)
-//     for (const log of logs) {
-//       // only WETH support for now
-//       if (log.address === WETH) {
-//         const transaction = iface.parseLog(log)
-//         const [f, t, value] = transaction.args
-//
-//         // only look for the seller -> buyer txs
-//         // (ignore additional fee split transfers)
-//         if (from == t) amount = value
-//       }
-//     }
-//     // console.log(transfers)
-//     return amount
-//   } catch (error) {
-//     return BigNumber.from(0)
-//   }
-// }
+
+const tokenURIToSVG = (base64Token:string) => {
+  let result;
+  result = base64Token.split(",")[1];
+  result = JSON.parse(atob(result));
+  return atob(result.image.split(",")[1]);
+}
 
 ;(async function run() {
   try {
