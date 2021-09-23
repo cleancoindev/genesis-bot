@@ -67,7 +67,7 @@ async function main () {
           let methods = process.env.METHOD_NAMES.split(',');
           for(let i=0; i < methods.length; i++) {
             let image
-            if (methods[i] == methodName) {
+            if ((methods[i] == methodName)||(methods[i] == methodId)) {
               try {
                 let base64Token = await contract.tokenURI(tokenIdBN);
                 image = tokenURIToSVG(base64Token);

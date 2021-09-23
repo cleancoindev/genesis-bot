@@ -20,7 +20,7 @@ DISCORD_DESCRIPTION= # How to describe the NFT
 ITEM_NAME= # Contract Token Name
 ITEM_ABBR= # Cotract Token Abbr
 
-METHOD_NAMES= # Comma delimited list of Contract Method Names
+METHOD_NAMES= # Comma delimited list of Contract Method Names or Method IDs
 ```
 
 2. Install dependencies:
