@@ -32,7 +32,10 @@ const abi = require (`./${process.env.ITEM_ABBR}-abi.json`)
 let rpc = new providers.JsonRpcProvider(process.env.PROVIDER_URL)
 const contract = new Contract(process.env.CONTRACT_ADDRESS, abi, rpc)
 
+
 async function main () {
+	var myname = await rpc.lookupAddress('0xA1D4657e0E6507D5a94d06DA93E94dC7C8c44b51');
+	console.log(myname)
   return new Promise(async (_, reject) => {
     try {
       let result
@@ -63,6 +66,16 @@ async function main () {
           const tokenId = tokenIdBN.toString()
           const event = eventLog.toString()
           const itemName = process.env.ITEM_NAME;
+	  const ensName =  await rpc.lookupAddress(to);
+
+	  // if address doesn't have an ens name
+	  if (ensName == null) {
+		// use address but shorten it
+		to = shortenAddress(to)		  
+	  } else {
+		// if it has an ens name, use it  
+		to = ensName
+	  }
 
           let methods = process.env.METHOD_NAMES.split(',');
           for(let i=0; i < methods.length; i++) {
@@ -111,3 +124,7 @@ const tokenURIToSVG = (base64Token:string) => {
     run()
   }
 })()
+
+function shortenAddress(address: string) {
+	  return address.slice(0, 6) + '‚Œddress.slice(-4)
+}

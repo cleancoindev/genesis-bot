@@ -56,7 +56,7 @@ export const sendDiscordMessage = async ({
         description: `**${process.env.DISCORD_DESCRIPTION}**`,
         image: { url: 'attachment://genesisitem.png' },
         footer: {
-          text: `by ${shortenAddress(to)}`,
+          text: `by ${to}`,
         },
       },
     ],
