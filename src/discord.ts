@@ -17,10 +17,6 @@ if (!url) {
 
 const webhookClient = new WebhookClient({ url: url })
 
-function shortenAddress(address: string) {
-  return address.slice(0, 6) + '…' + address.slice(-4)
-}
-
 // Discord doesn’t support data URI nor SVG files,
 // so we need to convert the data URI SVG into a PNG buffer.
 async function imageBuffer(svg: string): Promise<Buffer> {
