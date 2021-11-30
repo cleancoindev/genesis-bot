@@ -124,5 +124,5 @@ const tokenURIToSVG = (base64Token:string) => {
 })()
 
 function shortenAddress(address: string) {
-	  return address.slice(0, 6) + 'âÎddress.slice(-4)
+	  return address.slice(0, 6) + '…' + address.slice(-4)
 }
