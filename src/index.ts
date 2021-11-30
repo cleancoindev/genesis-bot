@@ -34,8 +34,6 @@ const contract = new Contract(process.env.CONTRACT_ADDRESS, abi, rpc)
 
 
 async function main () {
-	var myname = await rpc.lookupAddress('0xA1D4657e0E6507D5a94d06DA93E94dC7C8c44b51');
-	console.log(myname)
   return new Promise(async (_, reject) => {
     try {
       let result
