@@ -69,9 +69,9 @@ async function main () {
 	  // if address doesn't have an ens name
 	  if (ensName == null) {
 		// use address but shorten it
-		to = shortenAddress(to)		  
+		to = shortenAddress(to)
 	  } else {
-		// if it has an ens name, use it  
+		// if it has an ens name, use it
 		to = ensName
 	  }
 
@@ -124,5 +124,5 @@ const tokenURIToSVG = (base64Token:string) => {
 })()
 
 function shortenAddress(address: string) {
-	  return address.slice(0, 6) + '…' + address.slice(-4)
+	  return address.slice(0, 6) + '...' + address.slice(-4)
 }
