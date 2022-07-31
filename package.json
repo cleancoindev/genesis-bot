@@ -18,11 +18,11 @@
   "dependencies": {
     "typescript": "^4.4.2",
     "ts-node": "^10.2.1",
-    "discord.js": "^13.1.0",
+    "discord.js": "^14.0.0",
     "dotenv": "^10.0.0",
     "ethers": "^5.4.6",
     "loot-rarity": "^2.2.0",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.2.10",
     "svg2img": "^0.9.3"
   }
 }
